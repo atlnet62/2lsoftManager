@@ -7,7 +7,9 @@ export const searchDatas = async (request, response, next, searchValue, column, 
     };
     try {
         const result = await Model.getDataByKey(datas);
-        return result[0];
+        if (result[0]) {
+            return true;
+        }
     } catch (error) {
         return next(error);
     }
@@ -43,20 +45,8 @@ export const selectOneData = async (request, response, next, rows, table, key, v
     };
 
     try {
-        const result = await Model.getDataByKey(datas);
+        return await Model.getDataByKey(datas);
 
-        if (!result[0]) {
-            response.status(404).json({
-                message: `No existng datas.`,
-            });
-            return;
-        } else {
-            response.status(200).json({
-                data: result[0],
-                isRetrieved: true,
-            });
-            return;
-        }
     } catch (error) {
         return next(error);
     }
@@ -67,10 +57,8 @@ export const updateDatas = async (request, response, next, table, fragmentQuery,
 
     try {
         await Model.saveData(query, datas);
+        return true;
 
-        response.status(200).json({
-            isUpdated: true,
-        });
     } catch (error) {
         return next(error);
     }
@@ -81,10 +69,7 @@ export const insertDatas = async (request, response, next, table, values, rows, 
 
     try {
         await Model.saveData(query, datas);
-
-        response.status(200).json({
-            isCreated: true,
-        });
+        return true;
     } catch (error) {
         return next(error);
     }
@@ -98,10 +83,7 @@ export const delDatas = async (request, response, next, table, key, value) => {
 
     try {
         await Model.removeDataByKey(datas);
-
-        response.status(200).json({
-            isRemoved: true,
-        });
+        return true;
     } catch (error) {
         return next(error);
     }

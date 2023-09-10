@@ -18,7 +18,19 @@ export const selectUser = async (request, response, next) => {
     const rows = "id, uuid, email, password_date, reset_password, alias, role_code, validation_account, register_date, avatar";
 
     const result = await selectOneData(request, response, next, rows, "user", "uuid", uuid);
-    return result;
+
+    if (!result[0]) {
+        response.status(404).json({
+            message: `No existng datas.`,
+        });
+        return;
+    } else {
+        response.status(200).json({
+            isRetrieved: true,
+            data: result[0]
+        });
+        return;
+    }
 };
 
 export const addUser = async (request, response, next) => {
@@ -27,41 +39,47 @@ export const addUser = async (request, response, next) => {
 
     // Cherche si l'email est deja das la base
     const checkDatas = await searchDatas(request, response, next, email, "email", "user", "email");
+
     if (checkDatas) {
         response.status(409).json({
             message: "User existing, impossible to create a new user.",
         });
-        return;
-    }
 
-    try {
-        bcrypt.hash(password, 10, async (error, hash) => {
-            const uuidCreated = uuidv4();
+    } else {
+        try {
+            bcrypt.hash(password, 10, async (error, hash) => {
+                const uuidCreated = uuidv4();
 
-            const userDatas = {
-                uuid: uuidCreated,
-                email: email,
-                password: hash,
-                alias: email.split("@")[0],
-            };
+                const userDatas = {
+                    uuid: uuidCreated,
+                    email: email,
+                    password: hash,
+                    alias: email.split("@")[0],
+                };
 
-            const rows = "uuid, email, password, password_date, reset_password, alias, role_code, validation_account, register_date, avatar";
-            const values = ` ?, ?, ?, now(), 0, ?, 700, 0, now(), 'default.png'`;
+                const rows = "uuid, email, password, password_date, reset_password, alias, role_code, validation_account, register_date, avatar";
+                const values = ` ?, ?, ?, now(), 0, ?, 700, 0, now(), 'default.png'`;
 
-            const result = await insertDatas(request, response, next, "user", values, rows, userDatas);
+                const result = await insertDatas(request, response, next, "user", values, rows, userDatas);
 
-            console.log(response.statusCode);
+                if (result) {
+                    if (uuidCreated) {
+                        folderManager("create", `./server/public/datas/${uuidCreated}`);
+                    }
 
-            if (response.statusCode === 200) {
-                if (uuidCreated) {
-                    folderManager("create", `./server/public/datas/${uuidCreated}`);
+                    response.status(200).json({
+                        isCreated: true,
+                        uuid: uuidCreated,
+                    });
+                } else {
+                    response.status(500).json({
+                        isCreated: false,
+                    });
                 }
-            }
-
-            return result;
-        });
-    } catch (error) {
-        return next(error);
+            });
+        } catch (error) {
+            return next(error);
+        }
     }
 };
 
@@ -73,18 +91,18 @@ export const delUser = async (request, response, next) => {
         response.status(409).json({
             message: "No user found.",
         });
-        return;
-    }
+    } else {
+        const result = await delDatas(request, response, next, "user", "uuid", uuid);
+        if (result) {
+            if (uuid) {
+                folderManager("delete", `./server/public/datas/${uuid}`);
+            }
 
-    const result = await delDatas(request, response, next, "user", "uuid", uuid);
-
-    if (response.statusCode === 200) {
-        if (uuid) {
-            folderManager("delete", `./server/public/datas/${uuid}`);
+            response.status(200).json({
+                isDeleted: true,
+            });
         }
     }
-
-    return result;
 };
 
 export const uptUser = async (request, response, next) => {
@@ -108,7 +126,12 @@ export const uptUser = async (request, response, next) => {
 
     // execute the query and retur the result
     const result = await updateDatas(request, response, next, "user", fragmentQuery, "uuid", datas);
-    return result;
+
+    if (result) {
+        response.status(200).json({
+            isUpdated: true,
+        });
+    }
 };
 
 export const signin = async (request, response, next) => {
@@ -153,6 +176,7 @@ export const refreshToken = async (request, response, next) => {
     const TOKEN = request.headers["x-refresh-token"];
 
     if (TOKEN === undefined || TOKEN === "null") {
+
         response.status(404).json({
             message: "Token not found",
         });
@@ -165,26 +189,37 @@ export const refreshToken = async (request, response, next) => {
                 });
                 return;
             } else {
-                const result = await searchDatas(request, response, next, decoded.uuid, "role_code, validation_account", "user", "uuid");
+                const rows = "role_code, validation_account";
+                const result = await selectOneData(request, response, next, rows, "user", "uuid", decoded.uuid);
 
                 if (!result) {
                     response.status(409).json({
                         message: "User datas not found.",
                     });
                     return;
+                } else {
+
+                    const datas = {
+                        uuid: decoded.uuid,
+                        role_code: result[0].role_code,
+                        validation_account: result[0].validation_account,
+                    };
+    
+                    const refreshedToken = generateToken(datas, ACCESS_TOKEN_SECRET, "15m");
+
+                    if (refreshedToken) {
+                        response.status(200).json({
+                            isRefreshed: true,
+                            accessToken: refreshedToken,
+                        });
+                    } else {
+                        response.status(500).json({
+                            isRefreshed: false,
+                        });
+                    }
+    
                 }
 
-                const datas = {
-                    uuid: decoded.uuid,
-                    role_code: result.role_code,
-                    validation_account: result.validation_account,
-                };
-
-                const refreshedToken = generateToken(datas, ACCESS_TOKEN_SECRET, "15m");
-
-                response.status(200).json({
-                    accessToken: refreshedToken,
-                });
             }
         });
     }
