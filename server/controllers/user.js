@@ -9,7 +9,20 @@ import { folderManager, fragmentQueryConstruct, generateToken } from "../lib/gen
 export const selectAllUser = async (request, response, next) => {
     const rows = "id, uuid, email, password_date, reset_password, alias, role_code, validation_account, register_date, avatar";
     const result = await selectAllDatas(request, response, next, rows, "user");
-    return result;
+
+    if (!result[0]) {
+        response.status(404).json({
+            isError: true,
+            message: `No existng datas.`,
+        });
+        return;
+    } else {
+        response.status(200).json({
+            datas: result,
+            isRetrieved: true,
+        });
+        return;
+    }
 };
 
 export const selectUser = async (request, response, next) => {
@@ -21,13 +34,14 @@ export const selectUser = async (request, response, next) => {
 
     if (!result[0]) {
         response.status(404).json({
-            message: `No existng datas.`,
+            isError: true,
+            message: "No existng datas.",
         });
         return;
     } else {
         response.status(200).json({
             isRetrieved: true,
-            data: result[0]
+            data: result[0],
         });
         return;
     }
@@ -44,7 +58,6 @@ export const addUser = async (request, response, next) => {
         response.status(409).json({
             message: "User existing, impossible to create a new user.",
         });
-
     } else {
         try {
             bcrypt.hash(password, 10, async (error, hash) => {
@@ -71,10 +84,6 @@ export const addUser = async (request, response, next) => {
                         isCreated: true,
                         uuid: uuidCreated,
                     });
-                } else {
-                    response.status(500).json({
-                        isCreated: false,
-                    });
                 }
             });
         } catch (error) {
@@ -89,6 +98,7 @@ export const delUser = async (request, response, next) => {
     const checkDatas = await searchDatas(request, response, next, uuid, "email", "user", "uuid");
     if (!checkDatas) {
         response.status(409).json({
+            isError: true,
             message: "No user found.",
         });
     } else {
@@ -113,6 +123,7 @@ export const uptUser = async (request, response, next) => {
 
     if (!checkDatas) {
         response.status(409).json({
+            iseError: true,
             message: "No user found.",
         });
         return;
@@ -146,27 +157,36 @@ export const signin = async (request, response, next) => {
         const result = await Model.getDataByKey(userDatas);
         const isSamePwd = result[0] ? await bcrypt.compare(password, result[0].password) : null;
 
-        if (!result[0] || !isSamePwd) {
-            response.status(404).json({
-                message: "Bad Login or/and Password, Please try again.",
+        if (result[0].validation_account === 0) {
+            response.status(401).json({
+                isError: true,
+                message: "Your account is deactivate.",
             });
             return;
         }
 
-        const datas = {
-            uuid: result[0].uuid,
-            role_code: result[0].role_code,
-            validation_account: result[0].validation_account,
-        };
+        if (!result[0] || !isSamePwd) {
+            response.status(404).json({
+                isError: true,
+                message: "Bad Login or/and Password, Please try again.",
+            });
+            return;
+        } else {
+            const datas = {
+                uuid: result[0].uuid,
+                role_code: result[0].role_code,
+                validation_account: result[0].validation_account,
+            };
 
-        const accessToken = generateToken(datas, ACCESS_TOKEN_SECRET, "15m");
-        const refreshToken = generateToken(datas, REFRESH_TOKEN_SECRET, "24h");
+            const accessToken = generateToken(datas, ACCESS_TOKEN_SECRET, "15m");
+            const refreshToken = generateToken(datas, REFRESH_TOKEN_SECRET, "24h");
 
-        response.status(200).json({
-            accessToken,
-            refreshToken,
-            isLogged: true,
-        });
+            response.status(200).json({
+                accessToken,
+                refreshToken,
+                isLogged: true,
+            });
+        }
     } catch (error) {
         return next(error);
     }
@@ -176,8 +196,8 @@ export const refreshToken = async (request, response, next) => {
     const TOKEN = request.headers["x-refresh-token"];
 
     if (TOKEN === undefined || TOKEN === "null") {
-
         response.status(404).json({
+            isError: true,
             message: "Token not found",
         });
         return;
@@ -185,6 +205,7 @@ export const refreshToken = async (request, response, next) => {
         jwt.verify(TOKEN, REFRESH_TOKEN_SECRET, async (error, decoded) => {
             if (error) {
                 response.status(401).json({
+                    isError: true,
                     message: "Invalid Token",
                 });
                 return;
@@ -194,17 +215,17 @@ export const refreshToken = async (request, response, next) => {
 
                 if (!result) {
                     response.status(409).json({
+                        isError: true,
                         message: "User datas not found.",
                     });
                     return;
                 } else {
-
                     const datas = {
                         uuid: decoded.uuid,
                         role_code: result[0].role_code,
                         validation_account: result[0].validation_account,
                     };
-    
+
                     const refreshedToken = generateToken(datas, ACCESS_TOKEN_SECRET, "15m");
 
                     if (refreshedToken) {
@@ -212,14 +233,8 @@ export const refreshToken = async (request, response, next) => {
                             isRefreshed: true,
                             accessToken: refreshedToken,
                         });
-                    } else {
-                        response.status(500).json({
-                            isRefreshed: false,
-                        });
                     }
-    
                 }
-
             }
         });
     }

@@ -16,7 +16,8 @@ export const sanitize = (request, response, next) => {
         if (element) {
 
             if (element.length > max || element.length < min) {
-                response.status(400).json({
+                response.status(403).json({
+                    isError: true,
                     message: `The character limit is out min/max. please could you verify the field: ${nom}`,
                 });
                 sanitizeIsOK = false;
@@ -24,7 +25,8 @@ export const sanitize = (request, response, next) => {
             }
 
             if (!regex.test(element)) {
-                response.status(400).json({
+                response.status(403).json({
+                    isError: true,
                     message: `Character(s) not allowed on the field : ${nom}`,
                 });
                 sanitizeIsOK = false;

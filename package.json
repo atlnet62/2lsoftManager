@@ -5,7 +5,7 @@
     "main": "server.js",
     "type": "module",
     "scripts": {
-        "test": "jest --config ./server/jest.config.cjs --watch",
+        "test": "jest --config ./server/jest.config.cjs --watch --detectOpenHandles",
         "start": "cd client/ && npm run build && cd .. && node server/app.js",
         "dev": "nodemon server/app.js"
     },

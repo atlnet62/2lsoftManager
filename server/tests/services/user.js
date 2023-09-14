@@ -2,52 +2,76 @@ import axios from "axios";
 import { BACKURL } from "../../config/index";
 
 export const signin = async (datas) => {
-    const query = await axios.post(`${BACKURL}/user/signin`, datas);
-    return query;
+    return await axios.post(`${BACKURL}/user/signin`, datas)
+    .then((response) => {
+        return response.data;
+    }).catch((error) => {
+        return error.response.data;
+    })
 };
 
 export const refToken = async (aToken, rToken, datas) => {
-
-    const query = await axios.post(`${BACKURL}/user/refreshToken`, datas, {
-        headers: { 
-            "x-access-token": aToken, 
-            "x-refresh-token": rToken 
+    return await axios.post(`${BACKURL}/user/refreshToken`, datas, {
+        headers: {
+            "x-access-token": aToken,
+            "x-refresh-token": rToken,
         },
-    });
-
-    return query;
+    }).then((response) => {
+        return response.data;
+    }).catch((error) => {
+        return error.response.data;
+    })
 };
 
 export const selectUser = async (token, uuid) => {
-    const query = await axios.get(`${BACKURL}/user/select/${uuid}`, {
+    return await axios.get(`${BACKURL}/user/select/${uuid}`, {
         headers: { "x-access-token": token },
-    });
-    return query;
+    })
+    .then((response) => {
+        return response.data;
+    }).catch((error) => {
+        return error.response.data;
+    })
 };
 
 export const selectAllUser = async (token) => {
-    const query = await axios.get(`${BACKURL}/user/all`, {
+    return await axios.get(`${BACKURL}/user/all`, {
         headers: { "x-access-token": token },
-    });
-    return query;
+    })
+    .then((response) => {
+        return response.data;
+    }).catch((error) => {
+        return error.response.data;
+    })
 };
 
 export const addUser = async (datas) => {
-    const query = await axios.post(`${BACKURL}/user/add`, datas);
-    return query;
+    return await axios.post(`${BACKURL}/user/add`, datas)
+    .then((response) => {
+        return response.data;
+    }).catch((error) => {
+        return error.response.data;
+    })
 };
 
 export const delUser = async (token, uuid) => {
-    const query = await axios.delete(`${BACKURL}/user/del/${uuid}`, {
+    return await axios.delete(`${BACKURL}/user/del/${uuid}`, {
         headers: { "x-access-token": token },
-    });
-    return query;
+    })
+    .then((response) => {
+        return response.data;
+    }).catch((error) => {
+        return error.response.data;
+    })
 };
 
 export const updUser = async (token, uuid, datas) => {
-    const query = await axios.patch(`${BACKURL}/user/upt/${uuid}`, datas, {
+    return await axios.patch(`${BACKURL}/user/upt/${uuid}`, datas, {
         headers: { "x-access-token": token },
-    });
-    return query;
+    })    
+    .then((response) => {
+        return response.data;
+    }).catch((error) => {
+        return error.response.data;
+    })
 };
-

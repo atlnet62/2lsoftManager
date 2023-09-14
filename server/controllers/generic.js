@@ -19,20 +19,8 @@ export const selectAllDatas = async (request, response, next, rows, table) => {
     const query = `SELECT ${rows} FROM ${table}`;
 
     try {
-        const result = await Model.getAllDatas(query);
+        return await Model.getAllDatas(query);
 
-        if (!result[0]) {
-            response.status(404).json({
-                message: `No existng datas.`,
-            });
-            return;
-        } else {
-            response.status(200).json({
-                datas: result,
-                isRetrieved: true,
-            });
-            return;
-        }
     } catch (error) {
         return next(error);
     }
