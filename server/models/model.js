@@ -18,6 +18,16 @@ class Model {
         return result;
     }
 
+    static async getDataByKeys({ query, keyOne, keyTwo }) {
+        const [result] = await pool.execute(query, [keyOne, keyTwo]);
+        return result;
+    }
+
+    static async removeDataByKeys({ query, keyOne, keyTwo }) {
+        const [result] = await pool.execute(query, [keyOne, keyTwo]);
+        return result;
+    }
+
     static async saveData(query, datas) {
         const [result] = await pool.execute(query, [...Object.values(datas)]);
         return result;

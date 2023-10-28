@@ -1,3 +1,4 @@
+/* USER MANAGER CONTROLLER */
 import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from "../config/index.js";
 import jwt from "jsonwebtoken";
 import Model from "../models/model.js";
@@ -28,7 +29,7 @@ export const selectAllUser = async (request, response, next) => {
 export const selectUser = async (request, response, next) => {
     const { uuid } = request.params;
 
-    const rows = "id, uuid, email, password_date, reset_password, alias, role_code, validation_account, register_date, avatar";
+    const rows = "uuid, email, password_date, reset_password, alias, role_code, validation_account, register_date, avatar";
 
     const result = await selectOneData(request, response, next, rows, "user", "uuid", uuid);
 
@@ -116,7 +117,7 @@ export const delUser = async (request, response, next) => {
 };
 
 export const uptUser = async (request, response, next) => {
-    let uuid = request.params.userUUID;
+    const uuid = request.params.userUUID;
 
     // Cherche si l'email est deja das la base
     const checkDatas = await searchDatas(request, response, next, uuid, "email", "user", "uuid");
@@ -138,7 +139,11 @@ export const uptUser = async (request, response, next) => {
     // execute the query and retur the result
     const result = await updateDatas(request, response, next, "user", fragmentQuery, "uuid", datas);
 
-    if (result) {
+    if (!result) {
+        response.status(400).json({
+            isError: true,
+        });
+    } else {
         response.status(200).json({
             isUpdated: true,
         });

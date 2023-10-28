@@ -9,7 +9,7 @@ router.get("/all", isAdmin, selectAllUser);
 router.get("/select/:uuid", isAdmin, sanitize, selectUser);
 
 router.post("/add", sanitize, addUser);
-router.use("/upt/:userUUID", isAdmin, sanitize, uptUser);
+router.patch("/upt/:userUUID", isAdmin, sanitize, uptUser);
 router.delete("/del/:userUUID", isAdmin, sanitize, delUser);
 
 router.post("/signin", sanitize, signin);

@@ -1,14 +1,16 @@
 import Model from "../models/model.js";
 
-export const searchDatas = async (request, response, next, searchValue, column, table, key) => {
+export const searchDatas = async (request, response, next, value, column, table, key) => {
     const datas = {
-        key: searchValue,
+        key: value,
         query: `SELECT ${column} FROM ${table} WHERE ${key} = ?`,
     };
     try {
         const result = await Model.getDataByKey(datas);
         if (result[0]) {
             return true;
+        } else {
+            return false;
         }
     } catch (error) {
         return next(error);
@@ -58,6 +60,7 @@ export const insertDatas = async (request, response, next, table, values, rows, 
     try {
         await Model.saveData(query, datas);
         return true;
+        
     } catch (error) {
         return next(error);
     }

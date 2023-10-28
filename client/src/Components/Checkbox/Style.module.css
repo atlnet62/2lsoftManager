@@ -1,0 +1,14 @@
+#checkbox {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+#checkbox input {
+    width: 1rem;
+}
+
+#checkbox label {
+    padding: 0 0.5rem 0;
+}
