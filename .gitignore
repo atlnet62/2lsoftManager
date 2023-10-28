@@ -14,7 +14,7 @@
 /client/build
 
 # public directory
-/public
+/server/public
 /client/public
 
 # Documentation
