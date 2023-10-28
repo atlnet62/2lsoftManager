@@ -1,3 +1,0 @@
-# Intranet client
-
-In progress
